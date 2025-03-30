@@ -1,5 +1,5 @@
 # Set the branch name
-$branch = "main"  # Change if your branch is different
+$mainBranch = "main"  # Change if your main branch is different
 
 # Log file for tracking script activity
 $logFile = "random_file_push.log"
@@ -25,18 +25,48 @@ if ($filesToPush.Count -eq 0) {
 
 Write-Host "Found $($filesToPush.Count) files to push."
 
-# Loop through files one by one in random order
+$commitCount = 0
+$randomThreshold = Get-Random -Minimum 2 -Maximum 5  # Set a random number of commits before creating a new branch
+
 foreach ($file in $filesToPush) {
-    # Add, commit, and push the file
+    # Add, commit the file
     git add $file
-    git commit -m "committing $file "
-    git push origin $branch
+    git commit -m "Committing $file"
 
     # Log the action
-    "$timestamp - Pushed $file" | Out-File -Append -FilePath $logFile
-    Write-Host "$timestamp - Pushed $file"
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$timestamp - Committed $file" | Out-File -Append -FilePath $logFile
+    Write-Host "$timestamp - Committed $file"
 
-    # Wait for a random interval between 30 and 300 seconds
+    $commitCount++
+
+    # If commit count reaches the threshold, create a new branch and merge it
+    if ($commitCount -ge $randomThreshold) {
+        $branchName = "feature-" + ($file -replace '[^a-zA-Z0-9]', '_')
+        Write-Host "Creating new branch: $branchName"
+
+        git checkout -b $branchName
+        git push origin $branchName  # Push the new branch to remote BEFORE merging
+
+        # Merge back to main
+        git checkout $mainBranch
+        git merge $branchName --no-edit
+        git push origin $mainBranch  # Push the merged main branch
+
+        # Log the merge
+        "$timestamp - Merged $branchName into $mainBranch" | Out-File -Append -FilePath $logFile
+        Write-Host "$timestamp - Merged $branchName into $mainBranch"
+
+        # Delete the merged branch locally and remotely
+        git branch -d $branchName
+        git push origin --delete $branchName
+
+        # Reset commit counter and set a new random threshold
+        $commitCount = 0
+        $randomThreshold = Get-Random -Minimum 2 -Maximum 5
+    }
+
+    # Wait for a random interval between 30 and 80 seconds
     $interval = Get-Random -Minimum 30 -Maximum 300
     Write-Host "Next push in $interval seconds..."
     Start-Sleep -Seconds $interval
