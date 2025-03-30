@@ -68,6 +68,7 @@ The **Claims Processing System** is a centralized platform designed to efficient
 ## Setup & Deployment
 ### Prerequisites
 - Java 11+, MySQL 8+, .
+**Note**: Add your custom properties in application.properties.
 
 ### Steps
 1. **Backend**:
