@@ -29,8 +29,7 @@ Write-Host "Found $($filesToPush.Count) files to push."
 foreach ($file in $filesToPush) {
     # Add, commit, and push the file
     git add $file
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    git commit -m "Auto commit for $file on $timestamp"
+    git commit -m "committing $file "
     git push origin $branch
 
     # Log the action
